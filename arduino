@@ -1,0 +1,71 @@
+int pumpPin = 2;       // The output pin on the Arduino used for the pump
+int solenoidPin = 4;   // The output pin on the Arduino used for the solenoid
+
+int solenoidState = LOW;     // Set the Solenoid state to LOW
+int pumpState = LOW;         // Set the Pump state to LOW
+
+unsigned long oldSolenoidTime = 0;  // used to store last time solenoid state was changed
+unsigned long oldPumpTime = 0;  // used to store last time pump state was changed
+
+const long solenoidInterval = 1000;   // change solenoid state every X milliseconds (1000 = 1 second)
+const long pumpInterval = 5000;   // change pump state every X milliseconds (1000 = 1 second)
+
+
+void setup() {
+  // put your setup code here, to run once:
+  pinMode(pumpPin, OUTPUT);   // Sets the pump pin as an output
+  pinMode(solenoidPin, OUTPUT);   // Sets the solenoid pin as an output
+  pinMode(LED_BUILTIN, OUTPUT);   // Set up LED pin as an output
+  Serial.begin(9600);
+
+  
+}
+void loop() {
+  // put your main code here, to run repeatedly:
+
+  unsigned long currentTime = millis();    // Get the current time
+
+  // SOLENOID:  If current time is greater than interval
+  if (currentTime > (oldSolenoidTime + solenoidInterval)){
+    
+    // Save new time:
+    oldSolenoidTime = currentTime;
+
+    // Switch solenoid state:
+    if (solenoidState == LOW){
+      solenoidState=HIGH;
+    } else {
+      solenoidState=LOW;
+    };
+
+    // Set digital pin state:
+    digitalWrite(solenoidPin, solenoidState);
+    digitalWrite(LED_BUILTIN, solenoidState);   // TEMP - also change LED on arduino
+    
+    // Write to log
+    Serial.print("solenoidState: "); 
+    Serial.println(solenoidState);
+  };
+
+  // PUMP:  If current time is greater than interval
+  if (currentTime > (oldPumpTime + pumpInterval)){
+    
+    // Save new time:
+    oldPumpTime = currentTime;
+
+    // Switch solenoid state:
+    if (pumpState == LOW){
+      pumpState=HIGH;
+    } else {
+      pumpState=LOW;
+    };
+
+    // Set digital pin state:
+    digitalWrite(pumpPin, pumpState);
+    
+    // Write to log
+    Serial.print("pumpState: ");
+    Serial.println(pumpState);
+  };
+
+}
