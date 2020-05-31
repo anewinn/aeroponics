@@ -1,3 +1,14 @@
+/* 
+This version:
+ - solenoid timer (different intervals for on vs off)
+ - pump timer (not used)
+
+Next version:
+ - water pressure input
+ - pump timer determined by water pressure
+ */
+
+
 int pumpPin = 2;       // The output pin on the Arduino used for the pump
 int solenoidPin = 4;   // The output pin on the Arduino used for the solenoid
 
@@ -7,15 +18,23 @@ int pumpState = LOW;         // Set the Pump state to LOW
 unsigned long oldSolenoidTime = 0;  // used to store last time solenoid state was changed
 unsigned long oldPumpTime = 0;  // used to store last time pump state was changed
 
-const long solenoidInterval = 1000;   // change solenoid state every X milliseconds (1000 = 1 second)
-const long pumpInterval = 5000;   // change pump state every X milliseconds (1000 = 1 second)
+const long solenoidIntervalOn = 5000;   // change solenoid state every X milliseconds (1000 = 1 second)
+const long solenoidIntervalOff = 10000;   // change solenoid state every X milliseconds (300000 = 5 minutes)
+const long pumpInterval = 10000;   // change pump state every X milliseconds (1000 = 1 second)
 
+long solenoidInterval = solenoidIntervalOn;   // set first interval to ON
 
 void setup() {
   // put your setup code here, to run once:
+  
+  // INPUTS
+
+  // OUTPUTS
   pinMode(pumpPin, OUTPUT);   // Sets the pump pin as an output
   pinMode(solenoidPin, OUTPUT);   // Sets the solenoid pin as an output
   pinMode(LED_BUILTIN, OUTPUT);   // Set up LED pin as an output
+  
+  
   Serial.begin(9600);
 
   
@@ -33,6 +52,13 @@ void loop() {
 
     // Switch state:
     solenoidState = !solenoidState;
+
+    // Set next interval:
+    if (solenoidState == 1){
+      solenoidInterval = solenoidIntervalOn;
+    } else {
+      solenoidInterval = solenoidIntervalOff;
+    }
     
     // Set digital pin state:
     digitalWrite(solenoidPin, solenoidState);
