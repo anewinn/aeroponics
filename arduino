@@ -12,14 +12,14 @@ Next version:
 int pumpPin = 2;       // The output pin on the Arduino used for the pump
 int solenoidPin = 4;   // The output pin on the Arduino used for the solenoid
 
-int solenoidState = LOW;     // Set the Solenoid state to LOW
-int pumpState = LOW;         // Set the Pump state to LOW
+int solenoidState = HIGH;     // Set the Solenoid state to HIGH
+int pumpState = HIGH;         // Set the Pump state to HIGH
 
 unsigned long oldSolenoidTime = 0;  // used to store last time solenoid state was changed
 unsigned long oldPumpTime = 0;  // used to store last time pump state was changed
 
-const long solenoidIntervalOn = 5000;   // change solenoid state every X milliseconds (1000 = 1 second)
-const long solenoidIntervalOff = 10000;   // change solenoid state every X milliseconds (300000 = 5 minutes)
+const long solenoidIntervalOn = 1000;   // change solenoid state every X milliseconds (1000 = 1 second)
+const long solenoidIntervalOff = 5000;   // change solenoid state every X milliseconds (300000 = 5 minutes)
 const long pumpInterval = 10000;   // change pump state every X milliseconds (1000 = 1 second)
 
 long solenoidInterval = solenoidIntervalOn;   // set first interval to ON
@@ -54,7 +54,7 @@ void loop() {
     solenoidState = !solenoidState;
 
     // Set next interval:
-    if (solenoidState == 1){
+    if (solenoidState == LOW){
       solenoidInterval = solenoidIntervalOn;
     } else {
       solenoidInterval = solenoidIntervalOff;
@@ -69,6 +69,7 @@ void loop() {
     Serial.println(solenoidState);
   };
 
+  /*
   // PUMP:  If current time is greater than interval
   if (currentTime > (oldPumpTime + pumpInterval)){
     
@@ -85,5 +86,6 @@ void loop() {
     Serial.print("pumpState: ");
     Serial.println(pumpState);
   };
+  */
 
 }
