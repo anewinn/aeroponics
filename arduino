@@ -1,26 +1,30 @@
 /* 
 This version:
  - solenoid timer (different intervals for on vs off)
- - pump timer (not used)
-
-Next version:
  - water pressure input
+ - pump timer (not used)
+ 
+Next version:
  - pump timer determined by water pressure
  */
 
 
 int pumpPin = 2;       // The output pin on the Arduino used for the pump
 int solenoidPin = 4;   // The output pin on the Arduino used for the solenoid
+int pressurePin = A5;  // The input pin on the Arduino used for the water pressure sensor
 
 int solenoidState = HIGH;     // Set the Solenoid state to HIGH
 int pumpState = HIGH;         // Set the Pump state to HIGH
+int pressureVal = 0;        // Water pressure sensor variable
 
 unsigned long oldSolenoidTime = 0;  // used to store last time solenoid state was changed
 unsigned long oldPumpTime = 0;  // used to store last time pump state was changed
+unsigned long oldPressureTime = 0;  // used to store last time pump state was changed
 
-const long solenoidIntervalOn = 1000;   // change solenoid state every X milliseconds (1000 = 1 second)
-const long solenoidIntervalOff = 5000;   // change solenoid state every X milliseconds (300000 = 5 minutes)
+const long solenoidIntervalOn = 5000;   // change solenoid state every X milliseconds (1000 = 1 second)
+const long solenoidIntervalOff = 300000;   // change solenoid state every X milliseconds (300000 = 5 minutes)
 const long pumpInterval = 10000;   // change pump state every X milliseconds (1000 = 1 second)
+const long pressureReadInterval = 5000;   // read pressure sensor every X milliseconds (1000 = 1 second)
 
 long solenoidInterval = solenoidIntervalOn;   // set first interval to ON
 
@@ -43,7 +47,7 @@ void loop() {
   // put your main code here, to run repeatedly:
 
   unsigned long currentTime = millis();    // Get the current time
-
+    
   // SOLENOID:  If current time is greater than interval
   if (currentTime > (oldSolenoidTime + solenoidInterval)){
     
@@ -68,6 +72,30 @@ void loop() {
     Serial.print("solenoidState: "); 
     Serial.println(solenoidState);
   };
+
+  // PRESSURE SENSOR:  If current time has passed the interval
+  if (currentTime > (oldPressureTime + pressureReadInterval)){
+    
+    // Save new time:
+    oldPressureTime = currentTime;
+
+    // Read analogue value:
+    pressureVal = analogRead(pressurePin);
+
+    float voltage = (pressureVal*5.0)/1024.0;                          // Convert reading to voltage
+    float pressure_pascal = (3.0*((float)voltage-0.475))*1000000.0;   // Convert to pascal
+    float pressure_bar = pressure_pascal/10e5;                        // Convert to bar
+    float pressure_bsi = pressure_bar*14.503773773;                   // Convert to PSI
+    
+    // Print pressure sensor values
+    Serial.print("Pressure Sensor Value: ");
+    Serial.print(pressureVal);
+    Serial.print(";  Pressure = ");
+    Serial.print(pressure_bsi);
+    Serial.println(" PSI");
+
+  };
+  
 
   /*
   // PUMP:  If current time is greater than interval
