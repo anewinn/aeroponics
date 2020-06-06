@@ -28,6 +28,8 @@ const long pressureReadInterval = 5000;   // read pressure sensor every X millis
 
 long solenoidInterval = solenoidIntervalOn;   // set first interval to ON
 
+char ch = 0;   // Serial Input string
+
 void setup() {
   // put your setup code here, to run once:
   
@@ -43,6 +45,7 @@ void setup() {
 
   
 }
+
 void loop() {
   // put your main code here, to run repeatedly:
 
@@ -82,17 +85,23 @@ void loop() {
     // Read analogue value:
     pressureVal = analogRead(pressurePin);
 
-    float voltage = (pressureVal*5.0)/1024.0;                          // Convert reading to voltage
-    float pressure_pascal = (3.0*((float)voltage-0.475))*1000000.0;   // Convert to pascal
-    float pressure_bar = pressure_pascal/10e5;                        // Convert to bar
-    float pressure_bsi = pressure_bar*14.503773773;                   // Convert to PSI
+    float pressure_psi = convVoltageToPSI(pressureVal);
+  
     
     // Print pressure sensor values
     Serial.print("Pressure Sensor Value: ");
     Serial.print(pressureVal);
     Serial.print(";  Pressure = ");
-    Serial.print(pressure_bsi);
+    Serial.print(pressure_psi);
     Serial.println(" PSI");
+    
+      // SEND TELEMETRY (i.e. IoT sensor readings) TO GOOGLE CLOUD:
+    if (Serial.available()){
+     ch = Serial.read();
+     if (ch == '0'){
+       sendTelemetry();
+     }
+    }
 
   };
   
@@ -116,4 +125,31 @@ void loop() {
   };
   */
 
+}
+
+void convVoltageToPSI(pressureVal){
+    
+  float voltage = (pressureVal*5.0)/1024.0;                          // Convert reading to voltage
+  float pressure_pascal = (3.0*((float)voltage-0.475))*1000000.0;   // Convert to pascal
+  float pressure_bar = pressure_pascal/10e5;                        // Convert to bar
+  float pressure_psi_val = pressure_bar*14.503773773;                   // Convert to PSI
+  
+  return pressure_psi_val;
+    
+}
+
+
+void sendTelemetry(){
+  
+      // Read analogue values:
+    pressureVal = analogRead(pressurePin);
+
+    float voltage = (pressureVal*5.0)/1024.0;                          // Convert reading to voltage
+    float pressure_pascal = (3.0*((float)voltage-0.475))*1000000.0;   // Convert to pascal
+    float pressure_bar = pressure_pascal/10e5;                        // Convert to bar
+    float pressure_psi = pressure_bar*14.503773773;                   // Convert to PSI
+    
+    Serial.print("S PSI:");
+    Serial.println(pressure_psi);
+    
 }
