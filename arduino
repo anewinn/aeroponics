@@ -28,10 +28,17 @@ const long pressureReadInterval = 5000;   // read pressure sensor every X millis
 
 long solenoidInterval = solenoidIntervalOn;   // set first interval to ON
 
-char ch = 0;   // Serial Input string
+char ch = 0;           // Serial Input string
+char sendBuffer[32];  // set up string for output to Raspberry Pi
+String inputString = "";
+boolean stringComplete=false;
+
 
 void setup() {
   // put your setup code here, to run once:
+
+  Serial.begin(115200);
+  inputString.reserve(200);   // Not sure what this is...
   
   // INPUTS
 
@@ -41,7 +48,6 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);   // Set up LED pin as an output
   
   
-  Serial.begin(9600);
 
   
 }
@@ -72,8 +78,10 @@ void loop() {
     digitalWrite(LED_BUILTIN, solenoidState);   // TEMP - also change LED on arduino
     
     // Write to log
+    /*
     Serial.print("solenoidState: "); 
     Serial.println(solenoidState);
+    */
   };
 
   // PRESSURE SENSOR:  If current time has passed the interval
@@ -85,16 +93,25 @@ void loop() {
     // Read analogue value:
     pressureVal = analogRead(pressurePin);
 
-    float pressure_psi = convVoltageToPSI(pressureVal);
+    float voltage = (pressureVal*5.0)/1024.0;                          // Convert reading to voltage
+    float pressure_pascal = (3.0*((float)voltage-0.475))*1000000.0;   // Convert to pascal
+    float pressure_bar = pressure_pascal/10e5;                        // Convert to bar
+    int pressure_psi = pressure_bar*14.503773773;                   // Convert to PSI
   
     
     // Print pressure sensor values
+    /*
     Serial.print("Pressure Sensor Value: ");
     Serial.print(pressureVal);
     Serial.print(";  Pressure = ");
     Serial.print(pressure_psi);
     Serial.println(" PSI");
+    */
     
+    sprintf(sendBuffer, "X psi:%d temp:%d ph:%d ec:%d z:%d", pressure_psi, 0, 0, 0, 0);
+    Serial.println(sendBuffer);
+
+
       // SEND TELEMETRY (i.e. IoT sensor readings) TO GOOGLE CLOUD:
     if (Serial.available()){
      ch = Serial.read();
@@ -127,14 +144,12 @@ void loop() {
 
 }
 
-void convVoltageToPSI(pressureVal){
+void convVoltageToPSI(){
     
   float voltage = (pressureVal*5.0)/1024.0;                          // Convert reading to voltage
   float pressure_pascal = (3.0*((float)voltage-0.475))*1000000.0;   // Convert to pascal
   float pressure_bar = pressure_pascal/10e5;                        // Convert to bar
   float pressure_psi_val = pressure_bar*14.503773773;                   // Convert to PSI
-  
-  return pressure_psi_val;
     
 }
 
@@ -147,9 +162,11 @@ void sendTelemetry(){
     float voltage = (pressureVal*5.0)/1024.0;                          // Convert reading to voltage
     float pressure_pascal = (3.0*((float)voltage-0.475))*1000000.0;   // Convert to pascal
     float pressure_bar = pressure_pascal/10e5;                        // Convert to bar
-    float pressure_psi = pressure_bar*14.503773773;                   // Convert to PSI
+    int pressure_psi = pressure_bar*14.503773773;                   // Convert to PSI
     
-    Serial.print("S PSI:");
-    Serial.println(pressure_psi);
+    // Compile string to send to Raspberry PI
+    //memset(sendBuffer, 0, sizeof(sendBuffer));
+    sprintf(sendBuffer, "X psi:%d temp:%d ph:%d ec:%d z:%d", pressure_psi, 0, 0, 0, 0);
+    Serial.println(sendBuffer);
     
 }
