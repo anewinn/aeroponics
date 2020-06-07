@@ -38,7 +38,6 @@ void setup() {
   // put your setup code here, to run once:
 
   Serial.begin(115200);
-  inputString.reserve(200);   // Not sure what this is...
   
   // INPUTS
 
@@ -108,9 +107,22 @@ void loop() {
     Serial.println(" PSI");
     */
     
-    sprintf(sendBuffer, "X psi:%d temp:%d ph:%d ec:%d z:%d", pressure_psi, 0, 0, 0, 0);
-    Serial.println(sendBuffer);
-
+    //sprintf(sendBuffer, "X psi:%d temp:%d ph:%d ec:%d z:%d", pressure_psi, 0, 0, 0, 0);
+    //Serial.println(sendBuffer);
+    /*
+    Serial.print("X");
+    Serial.print(" p:");
+    Serial.print(pressure_psi);
+    Serial.print(" t:");
+    Serial.print(0);
+    //Serial.print(" ph:");
+    //Serial.print(0);
+    //Serial.print(" ec:");
+    //Serial.print(0);
+    //Serial.print(" z:");
+    //Serial.print(0);
+    Serial.println(" X");    
+    */
 
       // SEND TELEMETRY (i.e. IoT sensor readings) TO GOOGLE CLOUD:
     if (Serial.available()){
@@ -166,7 +178,8 @@ void sendTelemetry(){
     
     // Compile string to send to Raspberry PI
     //memset(sendBuffer, 0, sizeof(sendBuffer));
-    sprintf(sendBuffer, "X psi:%d temp:%d ph:%d ec:%d z:%d", pressure_psi, 0, 0, 0, 0);
+    //sprintf(sendBuffer, "X psi:%d temp:%d ph:%d ec:%d z:%d", pressure_psi, 0, 0, 0, 0);
+    sprintf(sendBuffer, "X p:%d t:%d", pressure_psi, 0);
     Serial.println(sendBuffer);
     
 }
