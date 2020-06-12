@@ -11,20 +11,26 @@ Next version:
 
 int pumpPin = 2;       // The output pin on the Arduino used for the pump
 int solenoidPin = 4;   // The output pin on the Arduino used for the solenoid
-int pressurePin = A5;  // The input pin on the Arduino used for the water pressure sensor
+
+int pressurePin = A0;  // The input pin on the Arduino used for the water pressure sensor
+int tempAirPin = A1;      // The input pin on the Arduino used for the air temperature sensor
 
 int solenoidState = HIGH;     // Set the Solenoid state to HIGH
 int pumpState = HIGH;         // Set the Pump state to HIGH
 int pressureVal = 0;        // Water pressure sensor variable
+int tempAirVal = 0;
 
 unsigned long oldSolenoidTime = 0;  // used to store last time solenoid state was changed
 unsigned long oldPumpTime = 0;  // used to store last time pump state was changed
+
 unsigned long oldPressureTime = 0;  // used to store last time pump state was changed
+unsigned long oldTempAirTime = 0;  // used to store last time pump state was changed
 
 const long solenoidIntervalOn = 5000;   // change solenoid state every X milliseconds (1000 = 1 second)
 const long solenoidIntervalOff = 300000;   // change solenoid state every X milliseconds (300000 = 5 minutes)
 const long pumpInterval = 10000;   // change pump state every X milliseconds (1000 = 1 second)
 const long pressureReadInterval = 5000;   // read pressure sensor every X milliseconds (1000 = 1 second)
+const long tempAirReadInterval = 1000;   // read pressure sensor every X milliseconds (1000 = 1 second)
 
 long solenoidInterval = solenoidIntervalOn;   // set first interval to ON
 
@@ -97,43 +103,33 @@ void loop() {
     float pressure_bar = pressure_pascal/10e5;                        // Convert to bar
     int pressure_psi = pressure_bar*14.503773773;                   // Convert to PSI
   
-    
     // Print pressure sensor values
-    /*
     Serial.print("Pressure Sensor Value: ");
     Serial.print(pressureVal);
     Serial.print(";  Pressure = ");
     Serial.print(pressure_psi);
-    Serial.println(" PSI");
-    */
-    
-    //sprintf(sendBuffer, "X psi:%d temp:%d ph:%d ec:%d z:%d", pressure_psi, 0, 0, 0, 0);
-    //Serial.println(sendBuffer);
-    /*
-    Serial.print("X");
-    Serial.print(" p:");
-    Serial.print(pressure_psi);
-    Serial.print(" t:");
-    Serial.print(0);
-    //Serial.print(" ph:");
-    //Serial.print(0);
-    //Serial.print(" ec:");
-    //Serial.print(0);
-    //Serial.print(" z:");
-    //Serial.print(0);
-    Serial.println(" X");    
-    */
-
-      // SEND TELEMETRY (i.e. IoT sensor readings) TO GOOGLE CLOUD:
-    if (Serial.available()){
-     ch = Serial.read();
-     if (ch == '0'){
-       sendTelemetry();
-     }
-    }
-
+    Serial.println(" PSI");  
   };
   
+  // AIR TEMP SENSOR:  If current time has passed the interval
+  if (currentTime > (oldTempAirTime + tempAirReadInterval)){
+    
+    // Save new time:
+    oldTempAirTime = currentTime;
+
+    // Read analogue value:
+    tempAirVal = analogRead(tempAirPin);
+
+    float voltageTempAir = ((float)tempAirVal*5.0)/1024;   // Convert reading to voltage
+    float tempAirCelcius = (voltageTempAir-0.5)*100;       // Convert to celcius
+  
+    // Print pressure sensor values
+    Serial.print("AirTemp Sensor Value: ");
+    Serial.print(tempAirVal);
+    Serial.print(";  Celsius = ");
+    Serial.print(tempAirCelcius);
+    Serial.println(" C");  
+  };
 
   /*
   // PUMP:  If current time is greater than interval
@@ -154,7 +150,17 @@ void loop() {
   };
   */
 
-}
+  // AirRead
+  
+  
+  // SEND TELEMETRY (i.e. IoT sensor readings) TO GOOGLE CLOUD:
+  if (Serial.available()){
+   ch = Serial.read();
+   if (ch == '0'){
+     sendTelemetry();
+    };
+  };
+};
 
 void convVoltageToPSI(){
     
