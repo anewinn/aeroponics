@@ -7,6 +7,10 @@ This version:
 Next version:
  - pump timer determined by water pressure
  */
+ 
+
+boolean runViaPython = true;   // Switch to determine whether running via python (to gcloud), or run via timers set below
+
 
 
 int pumpPin = 2;       // The output pin on the Arduino used for the pump
@@ -41,8 +45,8 @@ const long solenoidIntervalOff = 300000;   // change solenoid state every X mill
 const long pumpInterval = 10000;   // change pump state every X milliseconds (1000 = 1 second)
 const long pressureReadInterval = 5000;   // read pressure sensor every X milliseconds (1000 = 1 second)
 const long tempAirReadInterval = 10000;   // read air temperature sensor every X milliseconds (1000 = 1 second)
-const long phReadInterval = 1000;   // read PH sensor every X milliseconds (1000 = 1 second)
-const long ecReadInterval = 1000;   // read EC sensor every X milliseconds (1000 = 1 second)
+const long phReadInterval = 10000;   // read PH sensor every X milliseconds (1000 = 1 second)
+const long ecReadInterval = 10000;   // read EC sensor every X milliseconds (1000 = 1 second)
 
 long solenoidInterval = solenoidIntervalOn;   // set first interval to ON
 
@@ -102,8 +106,10 @@ void loop() {
     digitalWrite(LED_BUILTIN, solenoidState);   // TEMP - also change LED on arduino
     
     // Write to log
-    Serial.print("solenoidState: "); 
-    Serial.println(solenoidState);
+    if (runViaPython==false){
+      Serial.print("solenoidState: "); 
+      Serial.println(solenoidState);
+    };
     
   };
 
@@ -122,11 +128,13 @@ void loop() {
     int pressure_psi = pressure_bar*14.503773773;                   // Convert to PSI
   
     // Print pressure sensor values
-    Serial.print("Pressure Sensor Value: ");
-    Serial.print(pressureVal);
-    Serial.print(";  Pressure = ");
-    Serial.print(pressure_psi);
-    Serial.println(" PSI");  
+    if (runViaPython==false){
+      Serial.print("Pressure Sensor Value: ");
+      Serial.print(pressureVal);
+      Serial.print(";  Pressure = ");
+      Serial.print(pressure_psi);
+      Serial.println(" PSI");
+    };
   };
   
   // AIR TEMP SENSOR:  If current time has passed the interval
@@ -142,11 +150,13 @@ void loop() {
     float tempAirCelcius = (voltageTempAir-0.5)*100;       // Convert to celcius
   
     // Print pressure sensor values
-    Serial.print("AirTemp Sensor Value: ");
-    Serial.print(tempAirVal);
-    Serial.print(";  Celsius = ");
-    Serial.print(tempAirCelcius);
-    Serial.println(" C");  
+    if (runViaPython==false){
+      Serial.print("AirTemp Sensor Value: ");
+      Serial.print(tempAirVal);
+      Serial.print(";  Celsius = ");
+      Serial.print(tempAirCelcius);
+      Serial.println(" C");  
+    };
   };
   
   // TDS/EC SENSOR:  If current time has passed the interval
@@ -162,9 +172,11 @@ void loop() {
     ecVal = tdsValue*2/1000; // get to EC value
     
     // Print out values:
-    Serial.print("EC value: ");
-    Serial.print(ecVal);
-    Serial.println(" mS/cm");
+    if (runViaPython==false){
+      Serial.print("EC value: ");
+      Serial.print(ecVal);
+      Serial.println(" mS/cm");
+    };
 	 
   };
 
