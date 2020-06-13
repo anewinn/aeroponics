@@ -191,13 +191,13 @@ def publish(client, mqtt_topic, device, pipePressure, resTemp, resPH, resEC, sen
 
 def read_sensors(device, ser, pipePressure, resTemp, resPH, resEC, sens5):
   """Read Pi sensors"""
-
+  print('Reading the sensors')
   try:
 
     if device == 'pi':
       s = {}
-      response = serial_send_and_receive(ser, '0')
-      response = response.rstrip()                      	# removes trailing spaces in string
+      response = serial_send_and_receive(ser, 1)
+      response = response.rstrip()                          # removes trailing spaces in string
       print('Received from Arduino: {}'.format(response))
       if response[0] == 'X':
         pairs = response.split(' ')
@@ -236,6 +236,8 @@ def serial_send_and_receive(ser, theinput):
   while True:
     try:
       sleep(1)
+      print(theinput)
+      print(ser.in_waiting)
       if ser.in_waiting>0:
         state = ser.readline().decode('utf-8')
         if state:
@@ -308,6 +310,7 @@ def main(argv):
         args.registry_id, args.device_id, args.private_key_file,
         args.algorithm, args.ca_certs, args.mqtt_bridge_hostname,
         args.mqtt_bridge_port)
+    print('Looping Read')
     pipePressure, resTemp, resPH, resEC, sens5 = read_sensors(device, ser, pipePressure, resTemp, resPH, resEC, sens5)
     publish(client, mqtt_topic, device, pipePressure, resTemp, resPH, resEC, sens5)
     sleep(1)  
@@ -315,4 +318,5 @@ def main(argv):
 
 if __name__ == '__main__':
   main(sys.argv)
+
 
