@@ -12,25 +12,37 @@ Next version:
 int pumpPin = 2;       // The output pin on the Arduino used for the pump
 int solenoidPin = 4;   // The output pin on the Arduino used for the solenoid
 
+int pumpState = HIGH;         // Set the Pump state to HIGH
+int solenoidState = LOW;     // Set the Solenoid state to HIGH
+
+
 int pressurePin = A0;  // The input pin on the Arduino used for the water pressure sensor
 int tempAirPin = A1;      // The input pin on the Arduino used for the air temperature sensor
+int phPin = A4;			// The input pin on the Arduino used for the ph sensor
+int ecPin = A5;			// The input pin on the Arduino used for the ph sensor
 
-int solenoidState = HIGH;     // Set the Solenoid state to HIGH
-int pumpState = HIGH;         // Set the Pump state to HIGH
 int pressureVal = 0;        // Water pressure sensor variable
-int tempAirVal = 0;
+int tempAirVal = 0;			// Air Temp sensor variable
+int phVal = 0;				// PH sensor variable
+int ecVal = 0;				// EC sensor variable
 
 unsigned long oldSolenoidTime = 0;  // used to store last time solenoid state was changed
 unsigned long oldPumpTime = 0;  // used to store last time pump state was changed
 
-unsigned long oldPressureTime = 0;  // used to store last time pump state was changed
-unsigned long oldTempAirTime = 0;  // used to store last time pump state was changed
+unsigned long oldPressureTime = 0;  // used to store last time pressure was checked
+unsigned long oldTempAirTime = 0;  // used to store last time the air temperature was checked
+unsigned long oldPhTime = 0;  // used to store last time PH was measured
+unsigned long oldEcTime = 0;  // used to store last time EC was measured
 
+
+// Set intervals
 const long solenoidIntervalOn = 5000;   // change solenoid state every X milliseconds (1000 = 1 second)
 const long solenoidIntervalOff = 300000;   // change solenoid state every X milliseconds (300000 = 5 minutes)
 const long pumpInterval = 10000;   // change pump state every X milliseconds (1000 = 1 second)
 const long pressureReadInterval = 5000;   // read pressure sensor every X milliseconds (1000 = 1 second)
-const long tempAirReadInterval = 1000;   // read pressure sensor every X milliseconds (1000 = 1 second)
+const long tempAirReadInterval = 10000;   // read air temperature sensor every X milliseconds (1000 = 1 second)
+const long phReadInterval = 1000;   // read PH sensor every X milliseconds (1000 = 1 second)
+const long ecReadInterval = 1000;   // read EC sensor every X milliseconds (1000 = 1 second)
 
 long solenoidInterval = solenoidIntervalOn;   // set first interval to ON
 
@@ -39,21 +51,28 @@ char sendBuffer[32];  // set up string for output to Raspberry Pi
 String inputString = "";
 boolean stringComplete=false;
 
+// Gravity TDS Library
+#include <EEPROM.h>
+#include "GravityTDS.h"
+GravityTDS gravityTds;
+float tempTDS = 25,tdsValue = 0;
+
 
 void setup() {
   // put your setup code here, to run once:
 
   Serial.begin(115200);
   
-  // INPUTS
+  // Gravity TDS Library
+  gravityTds.setPin(ecPin);
+  gravityTds.setAref(5.0);  //reference voltage on ADC, default 5.0V on Arduino UNO
+  gravityTds.setAdcRange(1024);  //1024 for 10bit ADC;4096 for 12bit ADC
+  gravityTds.begin();  //initialization
 
   // OUTPUTS
   pinMode(pumpPin, OUTPUT);   // Sets the pump pin as an output
   pinMode(solenoidPin, OUTPUT);   // Sets the solenoid pin as an output
   pinMode(LED_BUILTIN, OUTPUT);   // Set up LED pin as an output
-  
-  
-
   
 }
 
@@ -83,10 +102,9 @@ void loop() {
     digitalWrite(LED_BUILTIN, solenoidState);   // TEMP - also change LED on arduino
     
     // Write to log
-    /*
     Serial.print("solenoidState: "); 
     Serial.println(solenoidState);
-    */
+    
   };
 
   // PRESSURE SENSOR:  If current time has passed the interval
@@ -130,6 +148,24 @@ void loop() {
     Serial.print(tempAirCelcius);
     Serial.println(" C");  
   };
+  
+  // TDS/EC SENSOR:  If current time has passed the interval
+  if (currentTime > (oldEcTime + ecReadInterval)){
+    
+    // Save new time:
+    oldEcTime = currentTime;
+
+	//tempTDS = readTemperature();  //add your temperature sensor and read it
+    gravityTds.setTemperature(tempTDS);  // set the temperature and execute temperature compensation
+    gravityTds.update();  //sample and calculate
+    tdsValue = gravityTds.getTdsValue();  // then get the value
+	ecVal = tdsValue*2/1000; // get to EC value
+    
+	// Print out values:
+	Serial.print(ecVal,0);
+    Serial.println("mS/cm");
+	 
+  };
 
   /*
   // PUMP:  If current time is greater than interval
@@ -150,7 +186,6 @@ void loop() {
   };
   */
 
-  // AirRead
   
   
   // SEND TELEMETRY (i.e. IoT sensor readings) TO GOOGLE CLOUD:
@@ -162,14 +197,6 @@ void loop() {
   };
 };
 
-void convVoltageToPSI(){
-    
-  float voltage = (pressureVal*5.0)/1024.0;                          // Convert reading to voltage
-  float pressure_pascal = (3.0*((float)voltage-0.475))*1000000.0;   // Convert to pascal
-  float pressure_bar = pressure_pascal/10e5;                        // Convert to bar
-  float pressure_psi_val = pressure_bar*14.503773773;                   // Convert to PSI
-    
-}
 
 
 void sendTelemetry(){
