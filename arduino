@@ -24,7 +24,7 @@ int ecPin = A5;			// The input pin on the Arduino used for the ph sensor
 int pressureVal = 0;        // Water pressure sensor variable
 int tempAirVal = 0;			// Air Temp sensor variable
 int phVal = 0;				// PH sensor variable
-int ecVal = 0;				// EC sensor variable
+float ecVal = 0.0;				// EC sensor variable
 
 unsigned long oldSolenoidTime = 0;  // used to store last time solenoid state was changed
 unsigned long oldPumpTime = 0;  // used to store last time pump state was changed
@@ -155,15 +155,16 @@ void loop() {
     // Save new time:
     oldEcTime = currentTime;
 
-	//tempTDS = readTemperature();  //add your temperature sensor and read it
+    //tempTDS = readTemperature();  //add your temperature sensor and read it
     gravityTds.setTemperature(tempTDS);  // set the temperature and execute temperature compensation
     gravityTds.update();  //sample and calculate
     tdsValue = gravityTds.getTdsValue();  // then get the value
-	ecVal = tdsValue*2/1000; // get to EC value
+    ecVal = tdsValue*2/1000; // get to EC value
     
-	// Print out values:
-	Serial.print(ecVal,0);
-    Serial.println("mS/cm");
+    // Print out values:
+    Serial.print("EC value: ");
+    Serial.print(ecVal);
+    Serial.println(" mS/cm");
 	 
   };
 
