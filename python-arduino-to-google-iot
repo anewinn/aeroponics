@@ -1,16 +1,4 @@
-# Copyright 2018 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     https://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+
 
 import argparse
 import datetime
@@ -149,6 +137,8 @@ def get_client(
   client.on_disconnect = on_disconnect
   client.on_message = on_message
   client.connect(mqtt_bridge_hostname, mqtt_bridge_port)
+  
+  print('Connecting to gCloud IOT')
 
   mqtt_config_topic = '/devices/{}/config'.format(device_id)
   client.subscribe(mqtt_config_topic, qos=1)
@@ -205,10 +195,9 @@ def read_sensors(device, ser, pipePressure, resTemp, resPH, resEC, sens5):
   try:
 
     if device == 'pi':
-      '''pipePressure, resTemp, resPH, resEC, sens5 = read_arduino_sensors(ser)'''
       s = {}
       response = serial_send_and_receive(ser, '0')
-      response = response.rstrip()                      # removes trailing spaces in string
+      response = response.rstrip()                      	# removes trailing spaces in string
       print('Received from Arduino: {}'.format(response))
       if response[0] == 'X':
         pairs = response.split(' ')
@@ -238,33 +227,6 @@ def read_sensors(device, ser, pipePressure, resTemp, resPH, resEC, sens5):
     print('I/O Error')
     
   return pipePressure, resTemp, resPH, resEC, sens5
-
-
-"""def read_arduino_sensors(ser):
-  ""Request and receive sensor readings from Arduino over serial.""
-
-    s = {}
-    response = serial_send_and_receive(ser, '0')
-    response = response.rstrip()                      # removes trailing spaces in string
-    print('Received from Arduino: {}'.format(response))
-    if response[0] == 'X':
-      pairs = response.split('_')
-      for pair in pairs:
-        if pair == 'X':
-          continue
-        else:
-          name, value = pair.split(' ')
-          s[name] = value
-    else:
-      print('Error getting Arduino sensor values over serial')
-      return 0
-    pipePressure = float(s['psi'])
-    resTemp = float(s['temp'])
-    resPH = float(s['ph'])
-    resEC = float(s['ec'])
-    sens5 = float(s['z'])
-
-  return pipePressure, resTemp, resPH, resEC, sens5"""
 
 
 def serial_send_and_receive(ser, theinput):
@@ -305,7 +267,7 @@ def init_serial(serial_port):
   ser = serial.Serial(serial_port, 115200, timeout=1)
   ser.flush()
   print('Sleeping 1s..')
-  sleep(0.5)
+  sleep(1)
   return ser
 
 def main(argv):
@@ -318,11 +280,10 @@ def main(argv):
   if device == 'pi':
     ser = init_serial(args.serial_port)
   else:
-    """sense_hat = None"""
     ser = None
   
   # Default starting values for sensor readings
-  pipePressure = 20
+  pipePressure = 0
   resTemp = 0
   resPH = 0
   resEC = 0
@@ -347,7 +308,6 @@ def main(argv):
         args.registry_id, args.device_id, args.private_key_file,
         args.algorithm, args.ca_certs, args.mqtt_bridge_hostname,
         args.mqtt_bridge_port)
-    "temp, pres, humi, solar, wind = read_sensors(device, sense_hat, ser, temp, pres, humi, solar, wind)"
     pipePressure, resTemp, resPH, resEC, sens5 = read_sensors(device, ser, pipePressure, resTemp, resPH, resEC, sens5)
     publish(client, mqtt_topic, device, pipePressure, resTemp, resPH, resEC, sens5)
     sleep(1)  
