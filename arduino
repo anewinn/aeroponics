@@ -65,7 +65,7 @@ float tempTDS = 25,tdsValue = 0;
 void setup() {
   // put your setup code here, to run once:
 
-  Serial.begin(115200);
+  Serial.begin(9600);
   
   // Gravity TDS Library
   gravityTds.setPin(ecPin);
@@ -82,6 +82,14 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+
+  // SEND TELEMETRY (i.e. IoT sensor readings) TO GOOGLE CLOUD:
+  if (Serial.available()){
+   ch = Serial.read();
+   if (ch == '1'){
+     sendTelemetry();
+    };
+  };
 
   unsigned long currentTime = millis();    // Get the current time
     
@@ -201,13 +209,7 @@ void loop() {
 
   
   
-  // SEND TELEMETRY (i.e. IoT sensor readings) TO GOOGLE CLOUD:
-  if (Serial.available()){
-   ch = Serial.read();
-   if (ch == '0'){
-     sendTelemetry();
-    };
-  };
+
 };
 
 
@@ -217,15 +219,22 @@ void sendTelemetry(){
       // Read analogue values:
     pressureVal = analogRead(pressurePin);
 
+    /*
     float voltage = (pressureVal*5.0)/1024.0;                          // Convert reading to voltage
     float pressure_pascal = (3.0*((float)voltage-0.475))*1000000.0;   // Convert to pascal
     float pressure_bar = pressure_pascal/10e5;                        // Convert to bar
     int pressure_psi = pressure_bar*14.503773773;                   // Convert to PSI
-    
+    */
     // Compile string to send to Raspberry PI
     //memset(sendBuffer, 0, sizeof(sendBuffer));
     //sprintf(sendBuffer, "X psi:%d temp:%d ph:%d ec:%d z:%d", pressure_psi, 0, 0, 0, 0);
-    sprintf(sendBuffer, "X p:%d t:%d", pressure_psi, 0);
-    Serial.println(sendBuffer);
+    //sprintf(sendBuffer, "X p:%d t:%d", pressure_psi, 0);
     
+    Serial.print("X p:");
+    Serial.println(pressureVal);
+    
+    /*
+    sprintf(sendBuffer, "X p:%d", pressureVal);
+    Serial.println(sendBuffer);
+    */
 }
