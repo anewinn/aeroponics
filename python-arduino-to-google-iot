@@ -1,5 +1,3 @@
-
-
 import argparse
 import datetime
 import json
@@ -191,30 +189,42 @@ def publish(client, mqtt_topic, device, pipePressure, resTemp, resPH, resEC, sen
 
 def read_sensors(device, ser, pipePressure, resTemp, resPH, resEC, sens5):
   """Read Pi sensors"""
-
+  print('Reading the sensors')
   try:
 
     if device == 'pi':
       s = {}
-      response = serial_send_and_receive(ser, '0')
-      response = response.rstrip()                      	# removes trailing spaces in string
+      response = serial_send_and_receive(ser, "1\n")
+      response = response.rstrip()                          # removes trailing spaces in string
       print('Received from Arduino: {}'.format(response))
-      if response[0] == 'X':
-        pairs = response.split(' ')
-        for pair in pairs:
-          if pair == 'X':
-            continue
-          else:
-            name, value = pair.split(':')
-            s[name] = value
-      else:
-        print('Error getting Arduino sensor values over serial')
-        return 0
-      pipePressure = float(s['p'])
-      resTemp = float(s['t'])
-      resPH = 0
-      resEC = 0
-      sens5 = 0
+      try:
+        if response[0] == 'X':
+          pairs = response.split(' ')
+          for pair in pairs:
+            if pair == 'X':
+              continue
+            else:
+              name, value = pair.split(':')
+              s[name] = value
+        else:
+          print('Error getting Arduino sensor values over serial')
+          return 0
+        
+      except:
+          print('No readings received')
+      
+      try:
+        pipePressure = float(s['p'])
+        resTemp = 0
+        resPH = 0
+        resEC = 0
+        sens5 = 0
+      except:
+        pipePressure = 0
+        resTemp = 0
+        resPH = 0
+        resEC = 0
+        sens5 = 0
     
     else:
       pipePressure = simulate_sensors(pipePressure, 3, -40, 50)
@@ -231,18 +241,15 @@ def read_sensors(device, ser, pipePressure, resTemp, resPH, resEC, sens5):
 
 def serial_send_and_receive(ser, theinput):
   """Write string to serial connection and return any response."""
-  ser.write(theinput)
   
-  while True:
-    try:
-      sleep(1)
-      if ser.in_waiting>0:
-        state = ser.readline().decode('utf-8')
-        if state:
-          return state
-    except:
-      pass
-  return 'E'
+  ser.write(b"2\n")
+  
+  try:
+    state = ser.readline().decode('utf-8').rstrip()
+  except:
+    state = "empty"
+        
+  return state
 
 
 def simulate_sensors(prev, stdev, min, max):
@@ -255,7 +262,7 @@ def simulate_sensors(prev, stdev, min, max):
 
 
 def init_serial(serial_port):
-  """from sense_hat import SenseHat"""
+
   import serial
   print('Creating and flushing serial port. Rebooting Arduino..')
   ser = serial.Serial(serial_port)
@@ -264,10 +271,10 @@ def init_serial(serial_port):
     sleep(1)
     ser.flushInput()
     ser.setDTR(True)
-  ser = serial.Serial(serial_port, 115200, timeout=1)
+  ser = serial.Serial(serial_port, 9600, timeout=1)
   ser.flush()
-  print('Sleeping 1s..')
-  sleep(1)
+  print('Wait 5s for set-up..')
+  sleep(5)
   return ser
 
 def main(argv):
@@ -310,9 +317,10 @@ def main(argv):
         args.mqtt_bridge_port)
     pipePressure, resTemp, resPH, resEC, sens5 = read_sensors(device, ser, pipePressure, resTemp, resPH, resEC, sens5)
     publish(client, mqtt_topic, device, pipePressure, resTemp, resPH, resEC, sens5)
-    sleep(1)  
+    sleep(5)  # Wait between readings
 
 
 if __name__ == '__main__':
   main(sys.argv)
+
 
