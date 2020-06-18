@@ -317,7 +317,7 @@ def main(argv):
         args.mqtt_bridge_port)
     pipePressure, resTemp, resPH, resEC, sens5 = read_sensors(device, ser, pipePressure, resTemp, resPH, resEC, sens5)
     publish(client, mqtt_topic, device, pipePressure, resTemp, resPH, resEC, sens5)
-    sleep(5)  # Wait between readings
+    sleep(10)  # Wait between readings
 
 
 if __name__ == '__main__':
