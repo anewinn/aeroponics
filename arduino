@@ -41,10 +41,10 @@ unsigned long oldEcTime = 0;  // used to store last time EC was measured
 const long solenoidIntervalOn = 5000;   // change solenoid state every X milliseconds (1000 = 1 second)
 const long solenoidIntervalOff = 300000;   // change solenoid state every X milliseconds (300000 = 5 minutes)
 const long pumpInterval = 10000;   // change pump state every X milliseconds (1000 = 1 second)
-const long pressureReadInterval = 5000;   // read pressure sensor every X milliseconds (1000 = 1 second)
-const long tempAirReadInterval = 10000;   // read air temperature sensor every X milliseconds (1000 = 1 second)
-const long phReadInterval = 10000;   // read PH sensor every X milliseconds (1000 = 1 second)
-const long ecReadInterval = 10000;   // read EC sensor every X milliseconds (1000 = 1 second)
+const long pressureReadInterval = 1000;   // read pressure sensor every X milliseconds (1000 = 1 second)
+const long tempAirReadInterval = 1000;   // read air temperature sensor every X milliseconds (1000 = 1 second)
+const long phReadInterval = 1000;   // read PH sensor every X milliseconds (1000 = 1 second)
+const long ecReadInterval = 1000;   // read EC sensor every X milliseconds (1000 = 1 second)
 
 long solenoidInterval = solenoidIntervalOn;   // set first interval to ON
 
@@ -131,15 +131,15 @@ void loop() {
 	    ch = Serial.read();
 	    // Pressure reading
 	    if (ch == '1'){
-		  sendTelemetry_PSI();
+		  sendTelemetry();
 		};
 	    // PH reading
 	    if (ch == '4'){
-		  sendTelemetry_PH();
+		  sendTelemetry();
 		};
 	    // EC reading
 	    if (ch == '5'){
-		 sendTelemetry_EC();
+		 sendTelemetry();
 		};   
 	  };
 	  break;
@@ -218,7 +218,7 @@ void loop() {
 	  static unsigned long printTime = millis();
 	  static float pHValue,voltage;
 	  if(millis()-samplingTime > samplingIntervalPH){
-		  pHArray[pHArrayIndex++]=analogRead(SensorPin);
+		  pHArray[pHArrayIndex++]=analogRead(phPin);
 		  if(pHArrayIndex==ArrayLength)pHArrayIndex=0;
 		  voltage = averageArray(pHArray, ArrayLength)*5.0/1024;
 		  pHValue = 3.5*voltage+Offset;
@@ -235,12 +235,15 @@ void loop() {
 	  break;
 	default:
 	  // If nothing else matches
-	  Serial.print("No match... ")
-	  Serial.print("Potentiometer value = ")
-	  Serial.print(potVal)
-	  Serial.print("; case value = ")
-	  Serial.println(potCaseVal)
-  }
+	  Serial.print("No match... ");
+	  Serial.print("Potentiometer value = ");
+	  Serial.print(potVal);
+	  Serial.print("; case value = ");
+	  Serial.println(potCaseVal);
+          break;
+          
+          
+    };
 
   /*
   // PUMP:  If current time is greater than interval
@@ -327,3 +330,4 @@ double averageArray(int* arr, int number){
     avg = (double)amount/(number-2);
   }//if
   return avg;
+};
