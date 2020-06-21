@@ -12,7 +12,6 @@ int tempChamberPin = 10;    // The input pin on the Arduino used for the chamber
 int phTransPin = 12;		// Transitor pin for PH probe	
 int ecTransPin = 13;		// Transitor pin for EC probe
 
-
 int pumpState = HIGH;         // Set the Pump state to HIGH
 int solenoidState = LOW;     // Set the Solenoid state to HIGH
 
@@ -214,31 +213,6 @@ void loop() {
 	  break;
 	
 	case 3:
-	  // TDS/EC SENSOR:  If current time has passed the interval
-	  if (currentTime > (oldEcTime + ecReadInterval)){
-
-		// Turn on EC sensor:
-		digitalWrite(phTransPin,LOW);  // Turn off PH sensor
-		digitalWrite(ecTransPin,HIGH);
-		
-		// Save new time:
-		oldEcTime = currentTime;
-
-		//tempTDS = readTemperature();  //add your temperature sensor and read it
-		gravityTds.setTemperature(tempTDS);  // set the temperature and execute temperature compensation
-		gravityTds.update();  //sample and calculate
-		tdsValue = gravityTds.getTdsValue();  // then get the value
-		ecVal = tdsValue*2/1000; // get to EC value
-
-		// Print out values:
-		Serial.print("EC value: ");
-		Serial.print(ecVal);
-		Serial.println(" mS/cm");
-		
-	  };
-	  break;
-	
-    case 4:
 	  // PH SENSOR
 	  
 	  // Turn on PH sensor:
@@ -265,8 +239,32 @@ void loop() {
 	  }
 	  
 	  break;
-	  
-	  
+	
+    case 4:
+	  // TDS/EC SENSOR:  If current time has passed the interval
+	  if (currentTime > (oldEcTime + ecReadInterval)){
+
+		// Turn on EC sensor:
+		digitalWrite(phTransPin,LOW);  // Turn off PH sensor
+		digitalWrite(ecTransPin,HIGH);
+		
+		// Save new time:
+		oldEcTime = currentTime;
+
+		//tempTDS = readTemperature();  //add your temperature sensor and read it
+		gravityTds.setTemperature(tempTDS);  // set the temperature and execute temperature compensation
+		gravityTds.update();  //sample and calculate
+		tdsValue = gravityTds.getTdsValue();  // then get the value
+		ecVal = tdsValue*2/1000; // get to EC value
+
+		// Print out values:
+		Serial.print("EC value: ");
+		Serial.print(ecVal);
+		Serial.println(" mS/cm");
+		
+	  };
+	  break;
+
 		
 	default:
 	  // If nothing else matches
@@ -276,7 +274,6 @@ void loop() {
 	  Serial.print("; case value = ");
 	  Serial.println(potCaseVal);
       break;
-          
           
     };
 
