@@ -156,6 +156,10 @@ void loop() {
 	// PRESSURE SENSOR:  If current time has passed the interval
 	  if (currentTime > (oldPressureTime + pressureReadInterval)){
 		
+		// Turn off other sensors:
+		digitalWrite(phTransPin,LOW);
+		digitalWrite(ecTransPin,LOW);
+		
 		// Save new time:
 		oldPressureTime = currentTime;
 
@@ -180,6 +184,10 @@ void loop() {
 	  // AIR TEMP SENSOR:  If current time has passed the interval
 	  if (currentTime > (oldTempAirTime + tempAirReadInterval)){
 		
+		// Turn off other sensors:
+		digitalWrite(phTransPin,LOW);
+		digitalWrite(ecTransPin,LOW);
+		
 		// Save new time:
 		oldTempAirTime = currentTime;
 
@@ -203,6 +211,7 @@ void loop() {
 	  if (currentTime > (oldEcTime + ecReadInterval)){
 
 		// Turn on EC sensor:
+		digitalWrite(phTransPin,LOW);  // Turn off PH sensor
 		digitalWrite(ecTransPin,HIGH);
 		
 		// Save new time:
@@ -230,6 +239,7 @@ void loop() {
 	  // PH SENSOR
 	  
 	  // Turn on PH sensor:
+	  digitalWrite(ecTransPin,LOW); // Turn off EC sensor
 	  digitalWrite(phTransPin,HIGH);
 	  
 	  static unsigned long samplingTime = millis();
@@ -250,9 +260,6 @@ void loop() {
 		Serial.println(pHValue,2);
 		printTime=millis();
 	  }
-	  
-	  // Turn off PH sensor:
-	  digitalWrite(phTransPin,LOW);
 	  
 	  break;
 	  
