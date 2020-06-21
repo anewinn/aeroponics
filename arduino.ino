@@ -127,12 +127,19 @@ void loop() {
   // Do different things depending on potentiameter:
   
   potVal = analogRead(potPin);
-  potCaseVal = round(potVal / (1024 / 4));
+  potCaseVal = round(potVal / (1024 / 5));
   
   switch (potCaseVal){
 	
 	case 0:
+	  
+	  
 	  // OPEN TO SEND TELEMETRY (i.e. IoT sensor readings) TO GOOGLE CLOUD:
+	  
+	  // Turn off other sensors:
+	  digitalWrite(phTransPin,LOW);
+	  digitalWrite(ecTransPin,LOW);
+	  
 	  if (Serial.available()){
 	    ch = Serial.read();
 	    // Pressure reading
@@ -228,10 +235,6 @@ void loop() {
 		Serial.print(ecVal);
 		Serial.println(" mS/cm");
 		
-		// Turn off EC sensor:
-		digitalWrite(ecTransPin,LOW);
-		
-
 	  };
 	  break;
 	
