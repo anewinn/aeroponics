@@ -1,7 +1,6 @@
 boolean runViaPython = true;   // Switch to determine whether running via python (to gcloud), or run via timers set below
 
 
-
 int relaySolenoidPin = 4;   // The output pin on the Arduino used for the solenoid relay
 int relayGrowLightsPin = 3;   // The output pin on the Arduino used for the grow lights
 int relayPumpPin = 2;       // The output pin on the Arduino used for the pump
@@ -9,6 +8,10 @@ int relayPumpPin = 2;       // The output pin on the Arduino used for the pump
 int tempWaterPin = 8;   // The input pin on the Arduino used for the water temperature sensor
 int humidChamberPin = 9;   // The input pin on the Arduino used for the chamber humidity sensor
 int tempChamberPin = 10;    // The input pin on the Arduino used for the chamber temperature sensor
+
+int phTransPin = 12;		// Transitor pin for PH probe	
+int ecTransPin = 13;		// Transitor pin for EC probe
+
 
 int pumpState = HIGH;         // Set the Pump state to HIGH
 int solenoidState = LOW;     // Set the Solenoid state to HIGH
@@ -80,6 +83,9 @@ void setup() {
   gravityTds.begin();  //initialization
 
   // OUTPUTS
+  pinMode(phTransPin,OUTPUT);			// Sets the ph transitor pin as an output
+  pinMode(ecTransPin,OUTPUT);			// Sets the ec transitor pin as an output
+  
   pinMode(relayPumpPin, OUTPUT);   // Sets the pump pin as an output
   pinMode(relaySolenoidPin, OUTPUT);   // Sets the solenoid pin as an output
   pinMode(LED_BUILTIN, OUTPUT);   // Set up LED pin as an output
@@ -131,15 +137,17 @@ void loop() {
 	    ch = Serial.read();
 	    // Pressure reading
 	    if (ch == '1'){
-		  sendTelemetry();
+		  sendTelemetry();  // TO UPDATE
 		};
+		// Air temp reading
+		
 	    // PH reading
 	    if (ch == '4'){
-		  sendTelemetry();
+		  sendTelemetry();  // TO UPDATE
 		};
 	    // EC reading
 	    if (ch == '5'){
-		 sendTelemetry();
+		 sendTelemetry();  // TO UPDATE
 		};   
 	  };
 	  break;
@@ -194,6 +202,9 @@ void loop() {
 	  // TDS/EC SENSOR:  If current time has passed the interval
 	  if (currentTime > (oldEcTime + ecReadInterval)){
 
+		// Turn on EC sensor:
+		digitalWrite(ecTransPin,HIGH);
+		
 		// Save new time:
 		oldEcTime = currentTime;
 
@@ -207,12 +218,19 @@ void loop() {
 		Serial.print("EC value: ");
 		Serial.print(ecVal);
 		Serial.println(" mS/cm");
+		
+		// Turn off EC sensor:
+		digitalWrite(ecTransPin,LOW);
+		
 
 	  };
 	  break;
 	
     case 4:
 	  // PH SENSOR
+	  
+	  // Turn on PH sensor:
+	  digitalWrite(phTransPin,HIGH);
 	  
 	  static unsigned long samplingTime = millis();
 	  static unsigned long printTime = millis();
@@ -232,7 +250,14 @@ void loop() {
 		Serial.println(pHValue,2);
 		printTime=millis();
 	  }
+	  
+	  // Turn off PH sensor:
+	  digitalWrite(phTransPin,LOW);
+	  
 	  break;
+	  
+	  
+		
 	default:
 	  // If nothing else matches
 	  Serial.print("No match... ");
@@ -240,7 +265,7 @@ void loop() {
 	  Serial.print(potVal);
 	  Serial.print("; case value = ");
 	  Serial.println(potCaseVal);
-          break;
+      break;
           
           
     };
