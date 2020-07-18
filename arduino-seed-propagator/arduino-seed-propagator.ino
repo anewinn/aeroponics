@@ -4,7 +4,7 @@ int relayHeatmatPin = 7;    // The output pin on the Arduino used for the heatma
 
 int heatmatState = HIGH;    // Set the Heatmat state to HIGH
 
-int tempAirVal = 0;			// Air tempC sensor value
+int tempPropagatorVal = 0;			// Air tempC sensor value
 double tempC = 0;        	//The variable we will use to store temperature in degrees. 
 
 double tempC_wantMin = 15;
@@ -15,7 +15,7 @@ double tempC_wantMinAdj = 0;
 double tempC_wantMaxAdj = 0;
 
 // Set intervals
-const long delayRead = 1000;   // check tempC every X milliseconds
+const long delayRead = 10000;   // check tempC every X milliseconds
 
 
 void setup() {
@@ -34,11 +34,12 @@ void setup() {
 void loop() {
   
   // put your main code here, to run repeatedly: 
-  sensorInput = analogRead(A0);    			//read the analog sensor and store it
-  tempC = (double)sensorInput / 1024;       //find percentage of input reading
-  tempC = tempC * 5;                 		//multiply by 5V to get voltage
-  tempC = tempC - 0.5;               		//Subtract the offset 
-  tempC = tempC * 100;               		//Convert to degrees 
+
+  // Read analogue value:
+  tempPropagatorVal = analogRead(tempPropagatorPin);
+
+  float voltageTempPropagator = ((float)tempPropagatorVal*5.0)/1024;   // Convert reading to voltage
+  float tempC = (voltageTempPropagator-0.5)*100;       // Convert to celcius
  
   Serial.print("Current Temperature: ");
   Serial.print(tempC);
