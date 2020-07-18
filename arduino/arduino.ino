@@ -296,6 +296,14 @@ void loop() {
 
 
 
+void seedTrayTemp(){
+	// Check temp of seedling tray, and control switch for heat pad
+
+
+
+}
+
+
 void sendTelemetry(){
   
       // Read analogue values:
